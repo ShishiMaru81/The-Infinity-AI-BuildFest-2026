@@ -1,4 +1,4 @@
-# GuardianAI
+# GuardianAI — The Infinity AI BuildFest 2026
 
 **AI-powered real-time hazard detection and emergency dispatch for Bangladesh**
 
@@ -161,4 +161,4 @@ Toggle from the dashboard header or **Settings** page. Frontend also stores pref
 
 ## License
 
-MIT — use emergency integrations responsibly.
+Apache-2.0 — see [LICENSE](LICENSE). Use emergency integrations responsibly.
