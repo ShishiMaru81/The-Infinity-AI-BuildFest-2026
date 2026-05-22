@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 5%;
+    --foreground: 210 40% 98%;
+  }
+  body {
+    @apply bg-guardian-bg text-gray-100 antialiased;
+  }
+}
+
+.leaflet-container {
+  background: #111827 !important;
+  border-radius: 0.5rem;
+  z-index: 0;
+}

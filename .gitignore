@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.env
+*.db
+uploads/
+snapshots/
+dispatch_log.json
+runs/
+*.pt
+
+# Node
+node_modules/
+.next/
+.env.local
+
+# IDE
+.idea/
+.vscode/
+*.log

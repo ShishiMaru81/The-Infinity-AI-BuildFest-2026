@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GuardianAI — Testing Setup Guide</title>
+  <style>
+    body { font-family: "Segoe UI", system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1.5rem; color: #1a1a1a; line-height: 1.5; }
+    h1 { color: #1e40af; border-bottom: 2px solid #3b82f6; padding-bottom: 0.5rem; }
+    h2 { color: #334155; margin-top: 1.75rem; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+    th, td { border: 1px solid #cbd5e1; padding: 0.5rem 0.75rem; text-align: left; }
+    th { background: #f1f5f9; }
+    code, pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; }
+    pre { padding: 1rem; overflow-x: auto; font-size: 0.8rem; }
+    .warn { background: #fef3c7; border: 1px solid #f59e0b; padding: 0.75rem 1rem; border-radius: 6px; }
+    .ok { background: #ecfdf5; border: 1px solid #10b981; padding: 0.75rem 1rem; border-radius: 6px; }
+    @media print { body { margin: 1cm; } h2 { page-break-after: avoid; } }
+  </style>
+</head>
+<body>
+
+<h1>GuardianAI — Testing Setup Guide</h1>
+<p><strong>Version 1.0</strong> · Test/demo mode only (no real 999 dispatch)</p>
+
+<div class="warn">
+  <strong>Legal:</strong> Keep <strong>Demo / Test Mode</strong> ON. False reports to 999 may be a criminal offense under Bangladesh law.
+</div>
+
+<h2>1. Must manage (required)</h2>
+<table>
+  <tr><th>#</th><th>Item</th><th>Action</th></tr>
+  <tr><td>1</td><td><code>backend/.env</code></td><td>Copy from <code>.env.example</code> — secrets here only</td></tr>
+  <tr><td>2</td><td><code>APP_MODE=test</code></td><td>Never <code>real</code> for classroom testing</td></tr>
+  <tr><td>3</td><td><code>TEST_EMAIL</code></td><td>Your inbox to verify alerts</td></tr>
+  <tr><td>4</td><td>SMTP (5 variables)</td><td>Gmail app password required</td></tr>
+  <tr><td>5</td><td><code>frontend/.env.local</code></td><td>localhost:8000 URLs</td></tr>
+  <tr><td>6</td><td>Backend</td><td><code>.\start-backend.ps1</code></td></tr>
+  <tr><td>7</td><td>Frontend</td><td><code>.\start-frontend.ps1</code></td></tr>
+  <tr><td>8</td><td>Webcam</td><td>Allow browser permission</td></tr>
+  <tr><td>9</td><td>UI badge</td><td><strong>Demo / Test Mode</strong> (green)</td></tr>
+</table>
+
+<h2>2. Recommended settings</h2>
+<table>
+  <tr><th>Variable</th><th>Testing value</th></tr>
+  <tr><td>REPORTER_NAME / REPORTER_PHONE</td><td>Your contact info</td></tr>
+  <tr><td>FALLBACK_ADDRESS</td><td>Mirpur, Dhaka, Bangladesh</td></tr>
+  <tr><td>DETECTION_CONFIDENCE_THRESHOLD</td><td>0.6</td></tr>
+  <tr><td>DETECTION_CONSECUTIVE_FRAMES</td><td>5 (or 3 for faster demo)</td></tr>
+  <tr><td>FRAME_FPS</td><td>8</td></tr>
+  <tr><td>ALERT_MODE</td><td>mock</td></tr>
+  <tr><td>Test prop</td><td>Knife or clear image</td></tr>
+</table>
+
+<h2>3. Leave empty for testing</h2>
+<p>Twilio (<code>TWILIO_*</code>), Roboflow (<code>ROBOFLOW_*</code>), Anthropic API key, Real Mode in UI.</p>
+
+<h2>4. Minimal backend .env</h2>
+<pre>APP_MODE=test
+TEST_EMAIL=your.real.email@gmail.com
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your.real.email@gmail.com
+SMTP_PASS=your_gmail_app_password
+SENDER_EMAIL=your.real.email@gmail.com
+
+REPORTER_NAME=Your Name
+REPORTER_PHONE=+88017XXXXXXXX
+FALLBACK_ADDRESS=Mirpur, Dhaka, Bangladesh
+ALERT_MODE=mock
+
+FRAME_FPS=8
+YOLO_MODEL=yolov8n.pt
+DETECTION_CONFIDENCE_THRESHOLD=0.6
+DETECTION_CONSECUTIVE_FRAMES=5</pre>
+
+<h2>5. Gmail app password</h2>
+<ol>
+  <li>Google Account → Security → 2-Step Verification ON</li>
+  <li>Create App password (Mail)</li>
+  <li>Paste into <code>SMTP_PASS</code></li>
+</ol>
+
+<h2>6. Start commands</h2>
+<pre>Terminal 1:  .\start-backend.ps1
+Terminal 2:  .\start-frontend.ps1
+Browser:     http://localhost:3000</pre>
+
+<h2>7. Five-minute test</h2>
+<ol>
+  <li>Confirm <strong>Demo / Test Mode</strong> in header</li>
+  <li>Start Webcam → show knife ~5 seconds</li>
+  <li>Modal opens → Confirm &amp; Dispatch</li>
+  <li>Check TEST_EMAIL inbox</li>
+  <li>Verify <code>backend/dispatch_log.json</code> has <code>"mode": "test"</code></li>
+  <li>Try False Alarm once</li>
+</ol>
+
+<h2>8. Troubleshooting</h2>
+<table>
+  <tr><th>Problem</th><th>Fix</th></tr>
+  <tr><td>No email</td><td>SMTP app password; restart backend</td></tr>
+  <tr><td>No boxes</td><td>Lighting; threshold 0.5; knife prop</td></tr>
+  <tr><td>No modal</td><td>Hold longer; consecutive frames = 3</td></tr>
+  <tr><td>Email to 999</td><td>APP_MODE=test + Test Mode UI</td></tr>
+</table>
+
+<div class="ok">
+  <strong>Summary:</strong> Test mode ON + SMTP + TEST_EMAIL + both servers + webcam + knife. Nothing else required.
+</div>
+
+<p style="margin-top:2rem;font-size:0.85rem;color:#64748b;">GuardianAI — CSE AI Competition / CloudCamp Bangladesh</p>
+
+</body>
+</html>
