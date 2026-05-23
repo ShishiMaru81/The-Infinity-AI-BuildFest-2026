@@ -1,10 +1,10 @@
-"""Ensemble hazard detection: YOLOv8 (+ optional custom weights) + Roboflow."""
+"""Ensemble hazard detection: YOLOv8 (+ optional Roboflow) with per-class thresholds."""
 
 import cv2
 import numpy as np
 
 from app.config import settings
-from app.detection.class_map import HAZARD_CLASSES, normalize_label
+from app.detection.class_map import hazard_passes_threshold, normalize_label
 from app.detection.roboflow_client import infer_roboflow
 from app.vision.yolo_detector import YOLODetector
 
@@ -26,16 +26,15 @@ class HazardDetector:
         frame_b64: str,
         confidence_threshold: float | None = None,
     ) -> tuple[list[dict], np.ndarray, str | None, float]:
-        """
-        Returns: detections, annotated frame, best_hazard_class, max_confidence
-        """
-        threshold = confidence_threshold or settings.detection_confidence_threshold
-        yolo_dets, annotated, _ = self.yolo.detect(frame_bgr)
+        default_thr = confidence_threshold or settings.detection_confidence_threshold
+        yolo_dets, yolo_annotated, _ = self.yolo.detect(frame_bgr)
         merged: list[dict] = []
 
         for d in yolo_dets:
             hazard = normalize_label(d["label"])
-            if hazard and d["confidence"] >= threshold:
+            if not hazard:
+                continue
+            if hazard_passes_threshold(hazard, d["confidence"], default_thr):
                 merged.append(
                     {
                         "label": hazard,
@@ -50,11 +49,12 @@ class HazardDetector:
             if model:
                 rf = await infer_roboflow(frame_b64, model)
                 for d in rf:
-                    if d["confidence"] >= threshold:
+                    h = d["label"]
+                    if hazard_passes_threshold(h, d["confidence"], default_thr):
                         merged.append(d)
 
         merged = _dedupe(merged)
-        annotated = _draw_hazards(frame_bgr, merged)
+        annotated = _draw_hazards(yolo_annotated, merged)
 
         best_hazard: str | None = None
         max_conf = 0.0
@@ -90,18 +90,19 @@ def _iou(a: list, b: list) -> float:
     return inter / (area_a + area_b - inter + 1e-6)
 
 
-def _draw_hazards(frame_bgr: np.ndarray, detections: list[dict]) -> np.ndarray:
-    out = frame_bgr.copy()
+def _draw_hazards(base_annotated: np.ndarray, detections: list[dict]) -> np.ndarray:
+    """Overlay confirmed hazard boxes on YOLO-annotated frame."""
+    out = base_annotated.copy()
     for d in detections:
         x1, y1, x2, y2 = d["bbox"]
-        color = HAZARD_COLORS.get(d["label"], (0, 255, 0))
-        cv2.rectangle(out, (x1, y1), (x2, y2), color, 2)
+        color = HAZARD_COLORS.get(d["label"], (0, 255, 255))
+        cv2.rectangle(out, (x1, y1), (x2, y2), color, 3)
         cv2.putText(
             out,
-            f"{d['label']} {d['confidence']:.0%}",
-            (x1, max(12, y1 - 8)),
+            f"HAZARD {d['label']} {d['confidence']:.0%}",
+            (x1, min(out.shape[0] - 5, y2 + 18)),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.55,
+            0.6,
             color,
             2,
         )

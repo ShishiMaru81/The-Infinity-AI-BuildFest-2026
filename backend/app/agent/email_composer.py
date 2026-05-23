@@ -1,8 +1,7 @@
-"""LLM-generated emergency email body."""
-
-import json
+"""LLM-generated emergency email body (Groq preferred)."""
 
 from app.config import settings
+from app.integrations.groq_llm import groq_available, groq_chat
 
 
 async def compose_email_body(
@@ -21,16 +20,28 @@ async def compose_email_body(
         "Verify on scene before dispatching units. False reports to 999 may be prosecuted under Bangladesh law."
     )
 
+    prompt = f"""Write a concise professional emergency email to Bangladesh National Emergency Service (999).
+Include: detected object ({threat_type}), confidence ({confidence:.0%}), time ({timestamp}), location ({location}),
+brief scene note ({description}), reporter ({reporter_name}, {reporter_phone}).
+End with this exact disclaimer line: {disclaimer}
+Plain text only, no markdown."""
+
+    if groq_available():
+        body = await groq_chat(
+            "You write clear, factual emergency alert emails.",
+            prompt,
+            max_tokens=600,
+        )
+        if body:
+            if disclaimer not in body:
+                body += f"\n\n{disclaimer}"
+            return subject, body
+
     if settings.anthropic_api_key:
         try:
             from anthropic import Anthropic
 
             client = Anthropic(api_key=settings.anthropic_api_key)
-            prompt = f"""Write a concise professional emergency email to Bangladesh National Emergency Service (999).
-Include: detected object ({threat_type}), confidence ({confidence:.0%}), time ({timestamp}), location ({location}),
-brief scene note ({description}), reporter ({reporter_name}, {reporter_phone}).
-End with the automated disclaimer. Plain text only, no markdown."""
-
             msg = client.messages.create(
                 model=settings.claude_model,
                 max_tokens=600,

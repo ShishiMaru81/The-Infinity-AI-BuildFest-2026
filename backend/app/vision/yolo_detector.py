@@ -1,22 +1,14 @@
 import base64
-from io import BytesIO
 
 import cv2
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+
+from app.config import settings
 
 # COCO class mapping for threat-relevant objects
 WEAPON_KEYWORDS = {"knife", "scissors", "baseball bat", "tennis racket"}
 FIRE_KEYWORDS = {"fire", "smoke"}
 VEHICLE_KEYWORDS = {"car", "truck", "bus", "motorcycle", "bicycle"}
-
-INCIDENT_MAP = {
-    "weapon": "WEAPON_DETECTED",
-    "violence": "VIOLENCE",
-    "fire": "FIRE",
-    "accident": "ACCIDENT",
-    "person": "SUSPICIOUS_ACTIVITY",
-}
 
 
 class YOLODetector:
@@ -34,7 +26,14 @@ class YOLODetector:
 
     def detect(self, frame_bgr: np.ndarray) -> tuple[list[dict], np.ndarray, float]:
         self._ensure_model()
-        results = self.model(frame_bgr, verbose=False)[0]
+        # Low conf threshold at inference — filter per-hazard later
+        results = self.model.predict(
+            frame_bgr,
+            verbose=False,
+            conf=settings.yolo_inference_conf,
+            iou=0.45,
+            imgsz=640,
+        )[0]
         detections = []
         max_conf = 0.0
 
@@ -59,11 +58,11 @@ class YOLODetector:
             cv2.putText(
                 annotated,
                 f"{label} {conf:.0%}",
-                (x1, y1 - 8),
+                (x1, max(12, y1 - 8)),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
+                0.55,
                 color,
-                1,
+                2,
             )
 
         return detections, annotated, max_conf

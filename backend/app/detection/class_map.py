@@ -2,6 +2,18 @@
 
 HAZARD_CLASSES = ("knife", "gun", "fire", "lighter")
 
+# Per-class minimum confidence (COCO knife is often 0.25–0.55 in webcam)
+HAZARD_MIN_CONFIDENCE: dict[str, float] = {
+    "knife": 0.22,
+    "gun": 0.40,
+    "fire": 0.35,
+    "lighter": 0.30,
+}
+
+
+def hazard_passes_threshold(hazard: str, confidence: float, default_threshold: float) -> bool:
+    return confidence >= HAZARD_MIN_CONFIDENCE.get(hazard, default_threshold)
+
 # Keywords per canonical class (matched case-insensitively on raw label)
 LABEL_KEYWORDS: dict[str, tuple[str, ...]] = {
     "knife": ("knife", "blade", "dagger", "machete", "sword"),

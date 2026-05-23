@@ -21,6 +21,7 @@ export interface DetectionResult {
   recommended_action: string;
   hazard_type?: string | null;
   hazard_confirmed?: boolean;
+  hazard_streak?: number;
 }
 
 interface VideoFeedProps {
@@ -57,6 +58,7 @@ export function VideoFeed({
   const [rtspUrl, setRtspUrl] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState("");
+  const [hazardStreak, setHazardStreak] = useState(0);
   const [location, setLocation] = useState(locationProp || "Dhaka, Bangladesh");
   const [lat, setLat] = useState(latProp ?? 23.8223);
   const [lng, setLng] = useState(lngProp ?? 90.3654);
@@ -84,6 +86,7 @@ export function VideoFeed({
       if (data.type === "detection") {
         onDetection(data);
         setConfidence(data.confidence * 100);
+        if (data.hazard_streak != null) setHazardStreak(data.hazard_streak);
         if (data.annotated_frame) setPreview(`data:image/jpeg;base64,${data.annotated_frame}`);
       }
       if (data.type === "hazard_alert") {
@@ -236,7 +239,12 @@ export function VideoFeed({
           <span>{confidence.toFixed(0)}%</span>
         </div>
         <Progress value={confidence} />
-        <p className="text-[10px] text-gray-500">Inference ~{fps} FPS · knife, gun, fire, lighter</p>
+        <p className="text-[10px] text-gray-500">
+          Inference ~{fps} FPS · knife, gun, fire, lighter
+          {hazardStreak > 0 && (
+            <span className="ml-2 text-amber-400">confirming… {hazardStreak} frame(s)</span>
+          )}
+        </p>
       </div>
 
       {mode === "webcam" && (

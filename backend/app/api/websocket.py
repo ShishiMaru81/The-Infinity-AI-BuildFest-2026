@@ -13,12 +13,14 @@ pipeline = VisionPipeline()
 
 _last_analysis = 0.0
 _min_interval = 1.0 / max(1, settings.frame_fps)
+_last_hazard_alert_at = 0.0
+_hazard_alert_cooldown_sec = 15.0
 
 
 @router.websocket("/ws/live")
 async def live_feed_ws(websocket: WebSocket):
     await websocket.accept()
-    global _last_analysis
+    global _last_analysis, _last_hazard_alert_at
 
     try:
         while True:
@@ -61,10 +63,14 @@ async def live_feed_ws(websocket: WebSocket):
                 "recommended_action": result.recommended_action,
                 "hazard_type": result.hazard_type,
                 "hazard_confirmed": result.hazard_confirmed,
+                "hazard_streak": pipeline.tracker._counts.get(result.hazard_type or "", 0),
             }
             await websocket.send_json(response)
 
             if result.hazard_confirmed and result.hazard_type:
+                if now - _last_hazard_alert_at < _hazard_alert_cooldown_sec:
+                    continue
+                _last_hazard_alert_at = now
                 async with async_session() as db:
                     logged = await log_incident_tool(
                         {

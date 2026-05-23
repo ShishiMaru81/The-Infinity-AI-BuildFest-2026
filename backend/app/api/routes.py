@@ -29,6 +29,10 @@ async def health():
         "service": "GuardianAI",
         "alert_mode": settings.alert_mode,
         "app_mode": settings.app_mode,
+        "groq_configured": bool(settings.groq_api_key),
+        "yolo_model": settings.yolo_model,
+        "detection_threshold": settings.detection_confidence_threshold,
+        "consecutive_frames": settings.detection_consecutive_frames,
         "version": "1.0.0",
     }
 

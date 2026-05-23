@@ -1,7 +1,11 @@
 import json
 
 from app.config import settings
-from app.detection.class_map import INCIDENT_BY_HAZARD, PRIORITY_BY_HAZARD
+from app.detection.class_map import (
+    INCIDENT_BY_HAZARD,
+    PRIORITY_BY_HAZARD,
+    hazard_passes_threshold,
+)
 from app.detection.frame_tracker import HazardFrameTracker
 from app.detection.hazard_detector import HazardDetector
 from app.schemas import DetectionObject, FrameAnalysisResult
@@ -37,7 +41,7 @@ class VisionPipeline:
         hazard_confirmed = False
         hazard_type: str | None = None
 
-        if best_hazard and max_conf >= threshold:
+        if best_hazard and hazard_passes_threshold(best_hazard, max_conf, threshold):
             if self.tracker.update(best_hazard, max_conf):
                 hazard_confirmed = True
                 hazard_type = best_hazard

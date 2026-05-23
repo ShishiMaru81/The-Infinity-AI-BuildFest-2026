@@ -2,7 +2,9 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    # LLM
+    # LLM (Groq preferred when key set)
+    groq_api_key: str = ""
+    groq_model: str = "llama-3.3-70b-versatile"
     anthropic_api_key: str = ""
     openai_api_key: str = ""
     claude_model: str = "claude-sonnet-4-20250514"
@@ -41,8 +43,9 @@ class Settings(BaseSettings):
     database_url: str = "sqlite+aiosqlite:///./guardianai.db"
     frame_fps: int = 8
     yolo_model: str = "yolov8n.pt"
-    detection_confidence_threshold: float = 0.6
-    detection_consecutive_frames: int = 5
+    yolo_inference_conf: float = 0.15
+    detection_confidence_threshold: float = 0.35
+    detection_consecutive_frames: int = 3
 
     # Roboflow (optional — improves gun/fire/lighter)
     roboflow_api_key: str = ""
